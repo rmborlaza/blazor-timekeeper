@@ -1,0 +1,50 @@
+﻿@rendermode InteractiveServer
+@inject TimekeeperContext DbContext
+
+<div class="mt-3 col-12">
+    @if (employees == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <td>Employee ID</td>
+                    <td>Full Name</td>
+                    <td>Date Hired</td>
+                    <td>Gender</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var employee in employees)
+                {
+                    <tr>
+                        <td>@employee.EmployeeId</td>
+                        <td>
+                            <NavLink href=@($"/employees/view/{employee.EmployeeId}")>
+                                @employee.FirstName @employee.LastName
+                            </NavLink>
+                        </td>
+                        <td>@employee.DateHired.ToShortDateString()</td>
+                        <td>@employee.Gender</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Employee> employees;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            employees = await DbContext.Employees.OrderBy(e => e.EmployeeId).ToListAsync();
+            StateHasChanged();
+        }
+    }
+}

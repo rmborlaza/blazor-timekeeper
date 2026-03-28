@@ -1,0 +1,43 @@
+﻿@page "/employees/view/{id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager NavManager
+@inject TimekeeperContext DbContext
+
+<PageTitle>View Employee</PageTitle>
+<h1>View Employee</h1>
+<h2>@employee.FirstName @employee.LastName</h2>
+
+<p>Employee ID: @employee.EmployeeId</p>
+<p>Gender: @employee.Gender</p>
+<p>Date Hired: @employee.DateHired.ToShortDateString()</p>
+
+<div>
+    <NavLink class="btn btn-primary" href="@($"/employees/update/{employee.EmployeeId}")">
+        Update Employee Details
+    </NavLink>
+    <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-danger">Delete Employee</button>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Employee employee = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        employee = await DbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == Id);
+    }
+
+    private void Test()
+    {
+        Console.WriteLine("Test() invoked");
+    }
+
+    private async Task DeleteEmployeeAsync()
+    {
+        DbContext.Employees.Remove(employee);
+        await DbContext.SaveChangesAsync();
+        NavManager.NavigateTo("/employees");
+    }
+}
