@@ -1,4 +1,6 @@
+using DotNetEnv.Configuration;
 using Timekeeper.Components;
+using Timekeeper.Services;
 
 namespace Timekeeper
 {
@@ -11,6 +13,8 @@ namespace Timekeeper
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+            builder.Services.AddSingleton<TimekeeperContext>();
+            builder.Configuration.AddDotNetEnv();
 
             var app = builder.Build();
 
