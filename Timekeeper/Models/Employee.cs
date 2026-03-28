@@ -10,7 +10,7 @@
 
         public string Gender { get; set; }
 
-        public DateOnly DateHired { get; set; }
+        public DateTime DateHired { get; set; }
 
         public List<TimekeepingTransaction> TimeKeepingTransactions { get; } = new();
     }
