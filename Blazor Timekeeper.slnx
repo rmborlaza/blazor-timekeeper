@@ -1,1 +1,3 @@
-<Solution />
+<Solution>
+  <Project Path="Timekeeper/Timekeeper.csproj" />
+</Solution>
