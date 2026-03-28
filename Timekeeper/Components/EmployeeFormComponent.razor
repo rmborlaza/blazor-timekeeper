@@ -1,0 +1,93 @@
+﻿@rendermode InteractiveServer
+@inject TimekeeperContext DbContext
+@inject NavigationManager NavManager
+
+<EditForm Model="@Employee" OnValidSubmit="SubmitForm" FormName="AddEmployeeForm" class="col-12 col-lg-4">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="first-name">First Name:</label>
+        <InputText id="first-name" @bind-Value="Employee.FirstName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="last-name">Last Name:</label>
+        <InputText id="last-name" @bind-Value="Employee.LastName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="gender">Gender:</label>
+        <InputText id="gender" @bind-Value="Employee.Gender" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="date-hired">Date Hired:</label>
+        <InputDate id="date-hired" @bind-Value="Employee.DateHired" class="form-control" />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Add Employee</button>
+    <button @onclick="CancelForm" class="btn btn-outline-secondary">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; }
+
+    [Parameter]
+    public bool IsUpdateMode { get; set; } = false;
+
+    private async Task SubmitForm()
+    {
+        if (IsUpdateMode)
+        {
+            await UpdateEmployeeAsync();
+        }
+        else
+        {
+            await AddEmployeeAsync();
+        }
+    }
+
+    private void CancelForm()
+    {
+        if (IsUpdateMode)
+        {
+            NavManager.NavigateTo($"/employees/view/{Employee.EmployeeId}");
+        }
+        else
+        {
+            NavManager.NavigateTo($"/employees");
+        }
+    }
+
+    private async Task AddEmployeeAsync()
+    {
+        await DbContext.Employees.AddAsync(Employee);
+        await DbContext.SaveChangesAsync();
+        NavManager.NavigateTo("/employees");
+    }
+
+    private async Task UpdateEmployeeAsync()
+    {
+        var updateEmployee = await DbContext.Employees.FindAsync(Employee.EmployeeId);
+
+        updateEmployee.FirstName = Employee.FirstName;
+        updateEmployee.LastName = Employee.LastName;
+        updateEmployee.Gender = Employee.Gender;
+        updateEmployee.DateHired = Employee.DateHired;
+
+        DbContext.Employees.Update(updateEmployee);
+        await DbContext.SaveChangesAsync();
+        NavManager.NavigateTo($"/employees/view/{Employee.EmployeeId}");
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Employee == null)
+        {
+            Employee = new();
+            Employee.DateHired = DateTime.UtcNow.ToLocalTime();
+        }
+    }
+}
