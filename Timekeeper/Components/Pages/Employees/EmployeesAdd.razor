@@ -1,0 +1,17 @@
+﻿@page "/employees/add"
+
+<PageTitle>Add New Employee</PageTitle>
+<h1>Add New Employee</h1>
+
+@if (employee != null)
+{
+    <div class="row">
+        <div class="col col-12 col-lg-6">
+            <EmployeeFormComponent Employee="@employee" />
+        </div>
+    </div>
+}
+
+@code {
+    private Employee employee = new();
+}

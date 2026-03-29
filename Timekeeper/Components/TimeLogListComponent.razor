@@ -1,0 +1,56 @@
+﻿@rendermode InteractiveServer
+@inject TimekeeperContext DbContext
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <td>Date & Time</td>
+            <td>Employee Name</td>
+            <td>Action</td>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Transactions == null)
+        {
+            <tr>
+                <td colspan="3">
+                    <em>Loading...</em>
+                </td>
+            </tr>
+        }
+        else if (Transactions.Count == 0)
+        {
+            <tr>
+                <td colspan="3">
+                    No records in the database.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var transaction in Transactions)
+            {
+                @if (transaction != null && transaction.Employee != null)
+                {
+                    <tr>
+                        <td>@transaction.TransactionDateTimeLocal.ToString()</td>
+                        <td>
+                            <NavLink href=@($"/employees/view/{transaction.Employee.EmployeeId}")>
+                                @transaction.Employee.FirstName @transaction.Employee.LastName
+                            </NavLink>
+                        </td>
+                        <td>@transaction.TransactionType.TransactionTypeName</td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; }
+
+    [Parameter]
+    public List<TimekeepingTransaction> Transactions { get; set; }
+}

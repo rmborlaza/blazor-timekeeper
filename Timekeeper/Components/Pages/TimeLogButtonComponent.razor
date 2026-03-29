@@ -1,0 +1,64 @@
+﻿@inject TimekeeperContext DbContext
+
+<button @onclick="TimeInAsync" class="btn btn-success" disabled="@(!canTimeIn)">Time In</button>
+<button @onclick="TimeOutAsync" class="btn btn-danger" disabled="@canTimeIn">Time Out</button>
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; }
+
+    [Parameter]
+    public EventCallback TimeSubmitted { get; set; }
+
+    private List<TimekeepingTransaction> transactions;
+    private bool canTimeIn = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Employee != null && Employee.TimeKeepingTransactions != null)
+        {
+            transactions = Employee.TimeKeepingTransactions.OrderByDescending(t => t.TransactionDateTime).ToList();
+
+            if (transactions?.Count > 0)
+            {
+                canTimeIn = transactions[0].TransactionType.TransactionTypeName == "OUT";
+            }
+            else
+            {
+                canTimeIn = true;
+            }
+        }
+    }
+
+    private async Task TimeInAsync()
+    {
+        await AddTransactionAsync("IN");
+        
+        canTimeIn = false;
+        StateHasChanged();
+
+        await TimeSubmitted.InvokeAsync();
+    }
+
+    private async Task TimeOutAsync()
+    {
+        await AddTransactionAsync("OUT");
+
+        canTimeIn = true;
+        StateHasChanged();
+
+        await TimeSubmitted.InvokeAsync();
+    }
+
+    private async Task AddTransactionAsync(string transactionTypeName)
+    {
+        var transaction = new TimekeepingTransaction();
+        transaction.TransactionDateTime = DateTime.UtcNow;
+        transaction.TransactionType = new TransactionType { TransactionTypeName = transactionTypeName };
+        transaction.EmployeeId = Employee.EmployeeId;
+        transaction.Employee = Employee;
+
+        await DbContext.TimeKeepingTransactions.AddAsync(transaction);
+        await DbContext.SaveChangesAsync();
+    }
+}

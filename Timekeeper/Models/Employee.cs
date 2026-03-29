@@ -13,10 +13,10 @@ namespace Timekeeper.Models
         public string LastName { get; set; }
 
         [Required(ErrorMessage = "Gender is required.")]
-        public string Gender { get; set; }
+        public string Gender { get; set; } // Can be an enum. Will use string for simplicity.
 
         public DateTime DateHired { get; set; }
 
-        public List<TimekeepingTransaction> TimeKeepingTransactions { get; } = new();
+        public List<TimekeepingTransaction> TimeKeepingTransactions { get; set; } = new();
     }
 }

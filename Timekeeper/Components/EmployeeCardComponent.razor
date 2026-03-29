@@ -1,0 +1,35 @@
+﻿@if (Employee != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col col-12">
+                    <h2>@Employee.FirstName @Employee.LastName</h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col col-12">
+                    Employee ID: @Employee.EmployeeId
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col col-12">
+                    Gender: @Employee.Gender
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col col-12">
+                    Date Hired: @Employee.DateHired.ToShortDateString()
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; }
+}
