@@ -1,10 +1,14 @@
-﻿@page "/employees"
+﻿@page "/"
 
 <PageTitle>All Employees</PageTitle>
 <h1>All Employees</h1>
-<NavLink href="/employees/add" class="btn btn-primary">Add Employee</NavLink>
+<NavLink href="/employees/add" class="btn btn-primary">
+    Add Employee
+</NavLink>
 
-<EmployeeListComponent />
+<div class="mt-3 col-12">
+    <EmployeeListComponent />
+</div>
 
 @code {
     

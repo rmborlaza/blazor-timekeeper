@@ -5,38 +5,62 @@
 
 <PageTitle>View Employee</PageTitle>
 <h1>View Employee</h1>
-<h2>@employee.FirstName @employee.LastName</h2>
 
-<p>Employee ID: @employee.EmployeeId</p>
-<p>Gender: @employee.Gender</p>
-<p>Date Hired: @employee.DateHired.ToShortDateString()</p>
-
-<div>
-    <NavLink class="btn btn-primary" href="@($"/employees/update/{employee.EmployeeId}")">
-        Update Employee Details
-    </NavLink>
-    <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-danger">Delete Employee</button>
+<div class="row mb-3">
+    <div class="col col-12 col-lg-6">
+        <EmployeeCardComponent Employee="@employee" />
+    </div>
 </div>
 
-@if (employee != null)
-{
-    <TimeLogListComponent Employee="@employee" />
-}
+<div class="row mb-3">
+    <div class="col col-12">
+        <NavLink class="btn btn-primary" href="@($"/employees/update/{employee.EmployeeId}")">
+            Update Employee Details
+        </NavLink>
+        <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-outline-danger">Delete Employee</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col col-12">
+        @if (employee != null)
+        {
+            <div class="mb-3">
+                <TimeLogButtonComponent Employee="@employee" TimeSubmitted="HandleSubmitAsync" />
+            </div>
+    
+            <div>
+                <TimeLogListComponent Employee="@employee" Transactions="@transactions" />
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
     private Employee employee = new();
+    private List<TimekeepingTransaction> transactions;
 
     protected override async Task OnParametersSetAsync()
     {
-        employee = await DbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        employee = await DbContext.Employees
+            .Include(e => e.TimeKeepingTransactions)
+            .ThenInclude(t => t.TransactionType)
+            .FirstOrDefaultAsync(e => e.EmployeeId == Id);
+
+        await LoadTransactionsAsync();
     }
 
-    private void Test()
+    private async Task LoadTransactionsAsync()
     {
-        Console.WriteLine("Test() invoked");
+        transactions = await DbContext.TimeKeepingTransactions
+            .Where(t => t.EmployeeId == employee.EmployeeId)
+            .Include(t => t.Employee)
+            .Include(t => t.TransactionType)
+            .OrderByDescending(t => t.TransactionDateTime)
+            .ToListAsync();
     }
 
     private async Task DeleteEmployeeAsync()
@@ -44,13 +68,20 @@
         DbContext.Employees.Remove(employee);
         await DbContext.SaveChangesAsync();
 
-        var unusedTransactionNames = await DbContext.TransactionType.Where(t => !t.TimekeepingTransaction.Any()).ToListAsync();
+        var unusedTransactionNames = await DbContext.TransactionType
+            .Where(tt => !DbContext.TimeKeepingTransactions.Any(tr => tr.TransactionTypeId == tt.TransactionTypeId))
+            .ToListAsync();
         if (unusedTransactionNames.Any())
         {
             DbContext.TransactionType.RemoveRange(unusedTransactionNames);
             await DbContext.SaveChangesAsync();
         }
-        
-        NavManager.NavigateTo("/employees");
+
+        NavManager.NavigateTo("/");
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        await LoadTransactionsAsync();
     }
 }

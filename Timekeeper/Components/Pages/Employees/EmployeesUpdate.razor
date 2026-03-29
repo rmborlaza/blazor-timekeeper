@@ -4,16 +4,23 @@
 <PageTitle>Update Employee Information</PageTitle>
 <h1>Update Employee Information</h1>
 
-<EmployeeFormComponent IsUpdateMode="true" Employee="@Employee" />
+@if (employee != null)
+{
+    <div class="row">
+        <div class="col col-12 col-lg-6">
+            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" />
+        </div>
+    </div>
+}
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
-    private Employee Employee = new();
+    private Employee employee;
 
     protected override async Task OnParametersSetAsync()
     {
-        Employee = await DbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
     }
 }

@@ -2,7 +2,7 @@
 @inject TimekeeperContext DbContext
 @inject NavigationManager NavManager
 
-<EditForm Model="@Employee" OnValidSubmit="SubmitForm" FormName="AddEmployeeForm" class="col-12 col-lg-4">
+<EditForm Model="@Employee" OnValidSubmit="SubmitForm" FormName="AddEmployeeForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -26,8 +26,11 @@
         <InputDate id="date-hired" @bind-Value="Employee.DateHired" class="form-control" />
     </div>
     
-    <button type="submit" class="btn btn-primary">Add Employee</button>
-    <button @onclick="CancelForm" class="btn btn-outline-secondary">Cancel</button>
+    <button type="submit" class="btn btn-primary">@buttonLabel</button>
+    @* <button @onclick="CancelForm" class="btn btn-outline-secondary">Cancel</button> *@
+    <a href="@(IsUpdateMode ? $"/employees/view/{Employee.EmployeeId}" : "/")" class="btn btn-outline-secondary">
+        Cancel
+    </a>
 </EditForm>
 
 @code {
@@ -36,6 +39,8 @@
 
     [Parameter]
     public bool IsUpdateMode { get; set; } = false;
+
+    private string buttonLabel = "Add Employee";
 
     private async Task SubmitForm()
     {
@@ -49,6 +54,7 @@
         }
     }
 
+    [Obsolete]
     private void CancelForm()
     {
         if (IsUpdateMode)
@@ -57,7 +63,7 @@
         }
         else
         {
-            NavManager.NavigateTo($"/employees");
+            NavManager.NavigateTo("/");
         }
     }
 
@@ -65,7 +71,7 @@
     {
         await DbContext.Employees.AddAsync(Employee);
         await DbContext.SaveChangesAsync();
-        NavManager.NavigateTo("/employees");
+        NavManager.NavigateTo("/");
     }
 
     private async Task UpdateEmployeeAsync()
@@ -84,10 +90,13 @@
 
     protected override void OnParametersSet()
     {
-        if (Employee == null)
+        if (Employee?.EmployeeId == 0)
         {
-            Employee = new();
             Employee.DateHired = DateTime.UtcNow.ToLocalTime();
+        }
+        else
+        {
+            buttonLabel = "Save Changes";
         }
     }
 }
