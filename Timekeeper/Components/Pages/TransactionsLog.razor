@@ -1,0 +1,63 @@
+﻿@page "/time-logs/new"
+@rendermode InteractiveServer
+@inject TimekeeperContext DbContext
+@inject NavigationManager NavManager
+
+<PageTitle>Log Employee</PageTitle>
+<h1>Log Time</h1>
+
+<EditForm Model="@transaction" FormName="LogEmployeeForm" class="col-12 col-lg-4">
+    <div class="mb-3">
+        <label for="employee-name">Employee</label>
+        <InputSelect id="employee-name" @bind-Value="selectedEmployeeId" class="form-select">
+            @foreach (var employee in employees)
+            {
+                <option value="@employee.EmployeeId">@employee.FirstName @employee.LastName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button @onclick="SubmitTimeInAsync" class="btn btn-success">Time In</button>
+
+    <button @onclick="SubmitTimeOutAsync" class="btn btn-danger">Time Out</button>
+</EditForm>
+
+@code {
+    private int selectedEmployeeId;
+    private TimekeepingTransaction transaction = new();
+
+    private List<Employee> employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await DbContext.Employees.OrderBy(e => e.FirstName).ToListAsync();
+        if (employees?.Count > 0)
+        {
+            selectedEmployeeId = employees[0].EmployeeId;
+        }
+    }
+
+    private async Task SubmitTimeInAsync()
+    {
+        transaction.TransactionDateTime = DateTime.UtcNow;
+        transaction.TransactionType = new TransactionType { TransactionTypeName = "Time In" };
+        transaction.EmployeeId = selectedEmployeeId;
+        transaction.Employee = await DbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == selectedEmployeeId);
+
+        await DbContext.TimeKeepingTransactions.AddAsync(transaction);
+        await DbContext.SaveChangesAsync();
+        NavManager.NavigateTo("/time-logs");
+    }
+
+    private async Task SubmitTimeOutAsync()
+    {
+        transaction.TransactionDateTime = DateTime.UtcNow;
+        transaction.TransactionType = new TransactionType { TransactionTypeName = "Time Out" };
+        transaction.EmployeeId = selectedEmployeeId;
+        transaction.Employee = await DbContext.Employees.FirstOrDefaultAsync(e => e.EmployeeId == selectedEmployeeId);
+
+        await DbContext.TimeKeepingTransactions.AddAsync(transaction);
+        await DbContext.SaveChangesAsync();
+        NavManager.NavigateTo("/time-logs");
+    }
+}
