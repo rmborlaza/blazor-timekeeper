@@ -17,13 +17,15 @@ namespace Timekeeper.Services
 
         public DbSet<TransactionType> TransactionType { get; set; }
 
-        public TimekeeperContext()
+        public TimekeeperContext(DbContextOptions<TimekeeperContext> options) : base(options)
         {
 
         }
 
+        [Obsolete]
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            return;
             DotNetEnv.Env.Load();
 
             _dbServer = DotNetEnv.Env.GetString("DB_SERVER");
