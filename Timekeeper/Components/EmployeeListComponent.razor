@@ -48,13 +48,21 @@
 
 @code {
     private List<Employee> employees;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            employees = await DbContext.Employees.AsNoTracking().OrderBy(e => e.EmployeeId).ToListAsync();
-            StateHasChanged();
+            try
+            {
+                employees = await DbContext.Employees.AsNoTracking().OrderBy(e => e.EmployeeId).ToListAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Debugger.Break();
+            }
         }
     }
 }

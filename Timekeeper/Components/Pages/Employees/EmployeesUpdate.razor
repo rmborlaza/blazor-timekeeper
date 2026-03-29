@@ -21,6 +21,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        try
+        {
+            employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Debugger.Break();
+        }
     }
 }
