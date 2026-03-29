@@ -45,12 +45,19 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        employee = await DbContext.Employees
-            .Include(e => e.TimeKeepingTransactions)
-            .ThenInclude(t => t.TransactionType)
-            .FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        try
+        {
+            employee = await DbContext.Employees
+                .Include(e => e.TimeKeepingTransactions)
+                .ThenInclude(t => t.TransactionType)
+                .FirstOrDefaultAsync(e => e.EmployeeId == Id);
 
-        await LoadTransactionsAsync();
+            await LoadTransactionsAsync();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task LoadTransactionsAsync()
@@ -65,23 +72,43 @@
 
     private async Task DeleteEmployeeAsync()
     {
-        DbContext.Employees.Remove(employee);
-        await DbContext.SaveChangesAsync();
-
-        var unusedTransactionNames = await DbContext.TransactionType
-            .Where(tt => !DbContext.TimeKeepingTransactions.Any(tr => tr.TransactionTypeId == tt.TransactionTypeId))
-            .ToListAsync();
-        if (unusedTransactionNames.Any())
+        try
         {
-            DbContext.TransactionType.RemoveRange(unusedTransactionNames);
+            DbContext.Employees.Remove(employee);
             await DbContext.SaveChangesAsync();
-        }
 
-        NavManager.NavigateTo("/");
+            var unusedTransactionNames = await DbContext.TransactionType
+                .Where(tt => !DbContext.TimeKeepingTransactions.Any(tr => tr.TransactionTypeId == tt.TransactionTypeId))
+                .ToListAsync();
+            if (unusedTransactionNames.Any())
+            {
+                DbContext.TransactionType.RemoveRange(unusedTransactionNames);
+                await DbContext.SaveChangesAsync();
+            }
+
+            NavManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task HandleSubmitAsync()
     {
-        await LoadTransactionsAsync();
+        try
+        {
+            await LoadTransactionsAsync();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+    private void HandleException(Exception ex)
+    {
+        Debug.WriteLine(ex.Message);
+        Debugger.Break();
     }
 }

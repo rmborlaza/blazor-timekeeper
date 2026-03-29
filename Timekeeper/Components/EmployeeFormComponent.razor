@@ -44,17 +44,24 @@
 
     private async Task SubmitForm()
     {
-        if (IsUpdateMode)
+        try
         {
-            await UpdateEmployeeAsync();
+            if (IsUpdateMode)
+            {
+                await UpdateEmployeeAsync();
+            }
+            else
+            {
+                await AddEmployeeAsync();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await AddEmployeeAsync();
+            HandleException(ex);
         }
     }
 
-    [Obsolete]
+    [Obsolete] // This causes problems with DbContext
     private void CancelForm()
     {
         if (IsUpdateMode)
@@ -98,5 +105,11 @@
         {
             buttonLabel = "Save Changes";
         }
+    }
+
+    private void HandleException(Exception ex)
+    {
+        Debug.WriteLine(ex.Message);
+        Debugger.Break();
     }
 }

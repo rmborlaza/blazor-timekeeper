@@ -17,37 +17,57 @@
     {
         if (Employee != null && Employee.TimeKeepingTransactions != null)
         {
-            transactions = Employee.TimeKeepingTransactions.OrderByDescending(t => t.TransactionDateTime).ToList();
-
-            if (transactions?.Count > 0)
+            try
             {
-                canTimeIn = transactions[0].TransactionType.TransactionTypeName == "OUT";
+                transactions = Employee.TimeKeepingTransactions.OrderByDescending(t => t.TransactionDateTime).ToList();
+                if (transactions?.Count > 0)
+                {
+                    canTimeIn = transactions[0].TransactionType.TransactionTypeName == "OUT";
+                }
+                else
+                {
+                    canTimeIn = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                canTimeIn = true;
+                HandleException(ex);
             }
         }
     }
 
     private async Task TimeInAsync()
     {
-        await AddTransactionAsync("IN");
-        
-        canTimeIn = false;
-        StateHasChanged();
+        try
+        {
+            await AddTransactionAsync("IN");
 
-        await TimeSubmitted.InvokeAsync();
+            canTimeIn = false;
+            StateHasChanged();
+
+            await TimeSubmitted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task TimeOutAsync()
     {
-        await AddTransactionAsync("OUT");
+        try
+        {
+            await AddTransactionAsync("OUT");
 
-        canTimeIn = true;
-        StateHasChanged();
+            canTimeIn = true;
+            StateHasChanged();
 
-        await TimeSubmitted.InvokeAsync();
+            await TimeSubmitted.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
     }
 
     private async Task AddTransactionAsync(string transactionTypeName)
@@ -60,5 +80,11 @@
 
         await DbContext.TimeKeepingTransactions.AddAsync(transaction);
         await DbContext.SaveChangesAsync();
+    }
+
+    private void HandleException(Exception ex)
+    {
+        Debug.WriteLine(ex.Message);
+        Debugger.Break();
     }
 }
