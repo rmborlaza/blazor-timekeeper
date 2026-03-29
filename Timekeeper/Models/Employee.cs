@@ -17,6 +17,6 @@ namespace Timekeeper.Models
 
         public DateTime DateHired { get; set; }
 
-        public List<TimekeepingTransaction> TimeKeepingTransactions { get; } = new();
+        public List<TimekeepingTransaction> TimeKeepingTransactions { get; set; } = new();
     }
 }
