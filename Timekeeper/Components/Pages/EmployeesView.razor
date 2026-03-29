@@ -18,6 +18,11 @@
     <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-danger">Delete Employee</button>
 </div>
 
+@if (employee != null)
+{
+    <TimeLogListComponent Employee="@employee" />
+}
+
 @code {
     [Parameter]
     public int Id { get; set; }
@@ -38,6 +43,14 @@
     {
         DbContext.Employees.Remove(employee);
         await DbContext.SaveChangesAsync();
+
+        var unusedTransactionNames = await DbContext.TransactionType.Where(t => !t.TimekeepingTransaction.Any()).ToListAsync();
+        if (unusedTransactionNames.Any())
+        {
+            DbContext.TransactionType.RemoveRange(unusedTransactionNames);
+            await DbContext.SaveChangesAsync();
+        }
+        
         NavManager.NavigateTo("/employees");
     }
 }
