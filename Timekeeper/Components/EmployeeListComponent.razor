@@ -1,0 +1,68 @@
+﻿@rendermode InteractiveServer
+@inject TimekeeperContext DbContext
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <td>Employee ID</td>
+            <td>Full Name</td>
+            <td>Date Hired</td>
+            <td>Gender</td>
+        </tr>
+    </thead>
+    <tbody>
+        @if (employees == null)
+        {
+            <tr>
+                <td colspan="4">
+                    <em>Loading...</em>
+                </td>
+            </tr>
+        }
+        else if (employees.Count == 0)
+        {
+            <tr>
+                <td colspan="4">
+                    No records in the database.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var employee in employees)
+            {
+                <tr>
+                    <td>@employee.EmployeeId</td>
+                    <td>
+                        <NavLink href=@($"/employees/view/{employee.EmployeeId}")>
+                            @employee.FirstName @employee.LastName
+                        </NavLink>
+                    </td>
+                    <td>@employee.DateHired.ToShortDateString()</td>
+                    <td>@employee.Gender</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Employee> employees;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                employees = await DbContext.Employees.AsNoTracking().OrderBy(e => e.EmployeeId).ToListAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Debugger.Break();
+            }
+        }
+    }
+}

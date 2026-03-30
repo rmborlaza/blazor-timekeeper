@@ -1,0 +1,36 @@
+﻿@page "/time-logs"
+@inject TimekeeperContext DbContext
+@rendermode InteractiveServer
+
+<PageTitle>Time Logs</PageTitle>
+<h1>Time Logs</h1>
+
+<TimeLogListComponent Transactions="@transactions" />
+
+@code {
+    private List<TimekeepingTransaction> transactions;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            transactions = await DbContext.TimeKeepingTransactions
+                .AsNoTracking()
+                .Include(t => t.Employee)
+                .Include(t => t.TransactionType)
+                .OrderByDescending(t => t.TransactionDateTime)
+                .ToListAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Debugger.Break();
+        }
+    }
+}

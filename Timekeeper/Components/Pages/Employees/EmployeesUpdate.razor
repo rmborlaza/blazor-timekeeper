@@ -1,0 +1,34 @@
+﻿@page "/employees/update/{id:int}"
+@inject TimekeeperContext DbContext
+
+<PageTitle>Update Employee Information</PageTitle>
+<h1>Update Employee Information</h1>
+
+@if (employee != null)
+{
+    <div class="row">
+        <div class="col col-12 col-lg-6">
+            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Employee employee;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Debugger.Break();
+        }
+    }
+}
