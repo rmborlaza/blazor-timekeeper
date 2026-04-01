@@ -1,4 +1,4 @@
-﻿@inject TimekeeperContext DbContext
+﻿@inject TimekeepingTransactionsDb TransactionsDb
 
 <button @onclick="TimeInAsync" class="btn btn-success" disabled="@(!canTimeIn)">Time In</button>
 <button @onclick="TimeOutAsync" class="btn btn-danger" disabled="@canTimeIn">Time Out</button>
@@ -8,21 +8,22 @@
     public Employee Employee { get; set; }
 
     [Parameter]
+    public List<TimekeepingTransaction> Transactions { get; set; }
+
+    [Parameter]
     public EventCallback TimeSubmitted { get; set; }
 
-    private List<TimekeepingTransaction> transactions;
     private bool canTimeIn = false;
 
     protected override void OnParametersSet()
     {
-        if (Employee != null && Employee.TimeKeepingTransactions != null)
+        if (Employee != null && Transactions != null)
         {
             try
             {
-                transactions = Employee.TimeKeepingTransactions.OrderByDescending(t => t.TransactionDateTime).ToList();
-                if (transactions?.Count > 0)
+                if (Transactions?.Count > 0)
                 {
-                    canTimeIn = transactions[0].TransactionType.TransactionTypeName == "OUT";
+                    canTimeIn = Transactions[0].TransactionType.TransactionTypeName == "OUT";
                 }
                 else
                 {
@@ -76,10 +77,8 @@
         transaction.TransactionDateTime = DateTime.UtcNow;
         transaction.TransactionType = new TransactionType { TransactionTypeName = transactionTypeName };
         transaction.EmployeeId = Employee.EmployeeId;
-        transaction.Employee = Employee;
 
-        await DbContext.TimeKeepingTransactions.AddAsync(transaction);
-        await DbContext.SaveChangesAsync();
+        await TransactionsDb.AddTransactionAsync(transaction);
     }
 
     private void HandleException(Exception ex)

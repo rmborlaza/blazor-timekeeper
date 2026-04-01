@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Timekeeper.Models
 {
+    [Index(nameof(Username), IsUnique = true)]
+    [Index(nameof(Email), IsUnique = true)]
+    [ValidatableType]
     public class Employee
     {
         public int EmployeeId { get; set; }
@@ -18,5 +22,29 @@ namespace Timekeeper.Models
         public DateTime DateHired { get; set; }
 
         public List<TimekeepingTransaction> TimeKeepingTransactions { get; set; } = new();
+
+        public Address Address { get; set; } = new();
+
+
+        // User Account Auth
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        public string PasswordHash { get; set; }
+
+        public AccountType AccountType { get; set; }
     }
+
+    // JUST NOTES. IGNORE
+    // Logger using NLog
+
+    // Mark employees as late/undertime
+    // Count hours logged in a day
+
+    // User Auth
+    // Role-based access control
 }

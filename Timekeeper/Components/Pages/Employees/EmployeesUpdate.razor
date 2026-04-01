@@ -1,5 +1,7 @@
 ﻿@page "/employees/update/{id:int}"
-@inject TimekeeperContext DbContext
+@attribute [Authorize(Roles = "Administrator")]
+@inject NavigationManager NavManager
+@inject EmployeeDb EmployeeDb
 
 <PageTitle>Update Employee Information</PageTitle>
 <h1>Update Employee Information</h1>
@@ -7,8 +9,8 @@
 @if (employee != null)
 {
     <div class="row">
-        <div class="col col-12 col-lg-6">
-            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" />
+        <div class="col col-12">
+            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" OnFormComplete="HandleFormCompletion" />
         </div>
     </div>
 }
@@ -23,12 +25,17 @@
     {
         try
         {
-            employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
+            employee = await EmployeeDb.GetEmployeeAsync(Id, new List<Type> { typeof(Address) });
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex.Message);
             Debugger.Break();
         }
+    }
+
+    private void HandleFormCompletion()
+    {
+        NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
     }
 }

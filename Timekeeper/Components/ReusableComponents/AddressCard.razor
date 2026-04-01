@@ -1,0 +1,30 @@
+﻿<div class="card">
+    <div class="card-header">
+        <span class="h4 card-title">Address</span>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col col-12">
+                Street: @Address.StreetAddress
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col col-12">
+                Barangay: @Address.Barangay
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col col-12">
+                City: @Address.City
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Address Address { get; set; }
+}

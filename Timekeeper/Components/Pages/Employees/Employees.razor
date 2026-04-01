@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@page "/employees"
+@attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>All Employees</PageTitle>
 <h1>All Employees</h1>

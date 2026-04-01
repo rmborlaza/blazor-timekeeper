@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject NavigationManager NavManager
+@inject IHttpContextAccessor ContextAccessor
+
+<div class="nav-item px-3">
+    <a @onclick="LogoutAsync" class="nav-link" href="#">
+        Logout
+    </a>
+</div>
+
+<div class="nav-item px-3">
+    <NavLink class="nav-link" href="/employees">
+        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Employees
+    </NavLink>
+</div>
+
+<div class="nav-item px-3">
+    <NavLink class="nav-link" href="time-logs">
+        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Time Logs
+    </NavLink>
+</div>
+@code {
+
+    private async Task LogoutAsync()
+    {
+        await ContextAccessor.HttpContext!.SignOutAsync();
+    }
+}

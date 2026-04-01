@@ -1,0 +1,104 @@
+﻿@page "/"
+@using System.Security.Claims
+@using Timekeeper.Services.AuthenticationService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavManager
+@inject Authentication AuthService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Login</PageTitle>
+
+<div class="row">
+    <div class="col col-12 col-md-6 col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <span class="h3">Login</span>
+            </div>
+
+            <div class="card-body">
+                <form method="post" @formname="LoginForm">
+                    <AntiforgeryToken />
+
+                    <input name="username" class="form-control mb-3" placeholder="Username" />
+                    <input name="password" type="password" class="form-control mb-3" placeholder="Password" />
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <span class="text-danger mt-3">@errorMessage</span>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel { get; set; } = new();
+
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+            int.TryParse(viewerId, out int id);
+
+            if (viewerRole == "Administrator")
+            {
+                NavManager.NavigateTo("/employees");
+            }
+            else
+            {
+                NavManager.NavigateTo($"/employees/view/{id}");
+            }
+            return;
+        }
+
+        var context = HttpContextAccessor.HttpContext;
+
+        if (context is not null && context.Request.Method == "POST")
+        {
+            var username = context.Request.Form["username"].ToString();
+            var password = context.Request.Form["password"].ToString();
+
+            var employee = await AuthService.LoginAsync(username, password);
+            if (employee != null)
+            {
+                if (employee.AccountType == AccountType.Administrator)
+                {
+                    NavManager.NavigateTo("/employees");
+                }
+                else
+                {
+                    NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
+                }
+            }
+            else
+            {
+                errorMessage = "Invalid username or password.";
+            }
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        var employee = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
+        if (employee != null)
+        {
+            if (employee.AccountType == AccountType.Administrator)
+            {
+                NavManager.NavigateTo("/");
+            }
+            else
+            {
+                NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
+            }
+        }
+        else
+        {
+            errorMessage = "Invalid username or password.";
+        }
+    }
+}

@@ -8,6 +8,6 @@
 
         public string TransactionTypeName { get; set; }
 
-        //public List<TimekeepingTransaction> TimekeepingTransaction { get; set; }
+        public List<TimekeepingTransaction> TimekeepingTransactions { get; set; }
     }
 }

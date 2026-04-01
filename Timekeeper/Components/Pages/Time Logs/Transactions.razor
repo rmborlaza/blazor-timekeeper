@@ -1,6 +1,7 @@
 ﻿@page "/time-logs"
-@inject TimekeeperContext DbContext
+@* @inject TimekeeperContext DbContext *@
 @rendermode InteractiveServer
+@inject TimekeepingTransactionsDb TransactionsDb
 
 <PageTitle>Time Logs</PageTitle>
 <h1>Time Logs</h1>
@@ -19,12 +20,13 @@
 
         try
         {
-            transactions = await DbContext.TimeKeepingTransactions
-                .AsNoTracking()
-                .Include(t => t.Employee)
-                .Include(t => t.TransactionType)
-                .OrderByDescending(t => t.TransactionDateTime)
-                .ToListAsync();
+            transactions = await TransactionsDb.GetTimekeepingTransactionsAsync();
+            // transactions = await DbContext.TimeKeepingTransactions
+            //     .AsNoTracking()
+            //     .Include(t => t.Employee)
+            //     .Include(t => t.TransactionType)
+            //     .OrderByDescending(t => t.TransactionDateTime)
+            //     .ToListAsync();
             StateHasChanged();
         }
         catch (Exception ex)
