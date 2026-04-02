@@ -9,5 +9,8 @@ namespace Timekeeper.Services.AuthenticationService
 
         [Required]
         public string Password { get; set; } = string.Empty;
+
+        [Required]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

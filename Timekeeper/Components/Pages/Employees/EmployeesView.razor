@@ -41,24 +41,29 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col col-12">
-        @if (employee != null)
-        {
-            <div class="mb-3">
-                @if (canTimeIn)
-                {
-                    <div class="mb-3">
-                        <TimeLogButtonComponent Employee="@employee" Transactions="@transactions" TimeSubmitted="HandleSubmitAsync" />
-                    </div>
-                }
 
-                <div>
-                    <TimeLogListComponent Employee="@employee" Transactions="@transactions" />
+
+<div class="row">
+
+    @if (employee != null)
+    {
+        <div class="col col-12 mb-3">
+            @if (canTimeIn)
+            {
+                <div class="mb-3">
+                    <TimeLogButtonComponent Employee="@employee" Transactions="@transactions" TimeSubmitted="HandleSubmitAsync" />
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+
+        <div class="col col-12 col-md-6">
+            <DailyTimeRecord Records="@dailyRecords"/>
+        </div>
+
+        @* <div class="col col-12 col-md-6">
+            <TimeLogListComponent Employee="@employee" Transactions="@transactions" />
+        </div> *@
+    }
 </div>
 
 @code {
@@ -69,6 +74,7 @@
     private bool canDelete = false;
     private Employee employee = new();
     private List<TimekeepingTransaction> transactions;
+    private DailyTimeRecordCollection dailyRecords;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,6 +117,8 @@
     private async Task LoadTransactionsAsync()
     {
         transactions = await TransactionsDb.GetTimekeepingTransactionsAsync(employee.EmployeeId);
+
+        dailyRecords = new DailyTimeRecordCollection(transactions);
     }
 
     private async Task DeleteEmployeeAsync()

@@ -65,15 +65,16 @@
                     <label for="password" class="form-label">Password</label>
                     <InputText id="password" type="password" class="form-control" @bind-Value="@ClearPassword" />
                 </div>
+
+                <div class="mb-3">
+                    <label for="confirmPw" class="form-label">Confirm Password</label>
+                    <InputText id="confirmPw" type="password" class="form-control" @bind-Value="@ConfirmPassword" />
+                </div>
             }
     
             <div class="mb-3">
                 <button type="submit" class="btn btn-primary">@buttonLabel</button>
                 <button @onclick="async () => await OnFormComplete.InvokeAsync()" class="btn btn-secondary">Cancel</button>
-
-                <a href="@(IsUpdateMode ? $"/employees/view/{Employee.EmployeeId}" : "/")" class="btn btn-outline-secondary">
-                    Cancel
-                </a>
             </div>
         </div>
 
@@ -88,7 +89,7 @@
                 <ValidationMessage For="@(() => Employee.Username)"></ValidationMessage>
                 <ValidationMessage For="@(() => Employee.Email)"></ValidationMessage>
                 <span class="text-danger @dUnameEmail">An employee with the same username or email already exists.</span>
-                <span class="text-danger @dPass">Password cannot be less than 8 characters.</span>
+                <span class="text-danger @dPass">@dPassMessage</span>
             </div>
         </div>
     </div>
@@ -105,6 +106,7 @@
     public EventCallback OnFormComplete { get; set; }
 
     public string ClearPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
 
     private string buttonLabel = "Add Employee";
     private bool passwordChanged = false;
@@ -112,6 +114,7 @@
     private int accountType;
     private string dPass = "d-none";
     private string dUnameEmail = "d-none";
+    private string dPassMessage = string.Empty;
 
     private async Task SubmitForm()
     {
@@ -142,6 +145,13 @@
                 if (!Password.ValidatePassword(ClearPassword))
                 {
                     dPass = "d-inline";
+                    dPassMessage = "Password cannot be less than 8 characters";
+                    return;
+                }
+                else if (ClearPassword != ConfirmPassword)
+                {
+                    dPass = "d-inline";
+                    dPassMessage = "Passwords do not match.";
                     return;
                 }
                 else
