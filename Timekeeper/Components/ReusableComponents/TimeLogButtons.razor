@@ -1,5 +1,5 @@
 ﻿@inject TimekeepingTransactionsDb TransactionsDb
-@inject ILogger<TimeLogButtonComponent> Logger
+@inject ILogger<TimeLogButtons> Logger
 
 <button @onclick="TimeInAsync" class="btn btn-success" disabled="@(!canTimeIn)">Time In</button>
 <button @onclick="TimeOutAsync" class="btn btn-danger" disabled="@canTimeIn">Time Out</button>

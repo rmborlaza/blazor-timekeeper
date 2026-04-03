@@ -13,7 +13,7 @@
 
 <div class="row">
     <div class="col col-12 col-md-6 col-lg-6 col-xl-4 mb-3">
-        <EmployeeCardComponent Employee="@employee" />
+        <EmployeeCard Employee="@employee" />
     </div>
     <div class="col col-12 col-md-6 col-lg-6 col-xl-4 mb-3">
         <AddressCard Address="@employee.Address" />
@@ -50,7 +50,7 @@
             @if (canTimeIn)
             {
                 <div class="mb-3">
-                    <TimeLogButtonComponent
+                    <TimeLogButtons
                         Employee="@employee"
                         Transactions="@transactions"
                         TimeSubmitted="HandleSubmitAsync" />

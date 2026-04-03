@@ -39,12 +39,9 @@ namespace Timekeeper.Models
         public AccountType AccountType { get; set; }
     }
 
-    // JUST NOTES. IGNORE
-    // Logger using NLog
-
-    // Mark employees as late/undertime
-    // Count hours logged in a day
-
-    // User Auth
-    // Role-based access control
+    public enum AccountType
+    {
+        Employee = 0,
+        Administrator = 1
+    }
 }

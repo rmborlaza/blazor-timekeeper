@@ -1,6 +1,4 @@
-﻿using Timekeeper.Services.Data;
-
-namespace Timekeeper.Models
+﻿namespace Timekeeper.Models
 {
     public class DailyTimeRecordCollection : List<DailyTimeRecord>
     {

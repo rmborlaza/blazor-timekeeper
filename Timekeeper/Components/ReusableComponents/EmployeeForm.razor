@@ -1,7 +1,7 @@
 ﻿@rendermode InteractiveServer
 @inject NavigationManager NavManager
 @inject EmployeeDb EmployeeDb
-@inject ILogger<EmployeeFormComponent> Logger
+@inject ILogger<EmployeeForm> Logger
 
 <EditForm Model="@Employee" OnValidSubmit="SubmitForm" FormName="AddEmployeeForm">
     <DataAnnotationsValidator />
@@ -213,7 +213,7 @@
 
     private void HandleException(Exception ex)
     {
-        Logger.LogCritical(ex, "Exception thrown in EmployeeFormComponent");
+        Logger.LogCritical(ex, "Exception thrown in EmployeeForm");
         Debug.WriteLine(ex.Message);
         Debugger.Break();
     }

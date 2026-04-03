@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
-using Timekeeper.Components.Pages.Employees;
 using Timekeeper.Models;
 
 namespace Timekeeper.Services.Data

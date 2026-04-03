@@ -1,6 +1,6 @@
 ﻿@rendermode InteractiveServer
 @inject EmployeeDb EmployeeDb
-@inject ILogger<EmployeeListComponent> Logger
+@inject ILogger<EmployeeList> Logger
 
 <table class="table table-striped">
     <thead>
@@ -65,7 +65,7 @@
             }
             catch (Exception ex)
             {
-                Logger.LogCritical(ex, "Exception throwin in EpmloyeeLisComponent");
+                Logger.LogCritical(ex, "Exception throwin in EmployeeList");
                 Debug.WriteLine(ex.Message);
                 Debugger.Break();
             }
