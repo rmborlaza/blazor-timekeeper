@@ -5,6 +5,7 @@
 @inject NavigationManager NavManager
 @inject Authentication AuthService
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<Login> Logger
 
 <PageTitle>Login</PageTitle>
 
@@ -47,6 +48,14 @@
 
             if (viewerRole == "Administrator")
             {
+                var firstName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                var lastName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+
+                if (firstName != null && lastName != null)
+                {
+                    LogAdminLogin($"{firstName} {lastName}");
+                }
+
                 NavManager.NavigateTo("/employees");
             }
             else
@@ -68,6 +77,7 @@
             {
                 if (employee.AccountType == AccountType.Administrator)
                 {
+                    LogAdminLogin($"{employee.FirstName} {employee.LastName}");
                     NavManager.NavigateTo("/employees");
                 }
                 else
@@ -100,5 +110,10 @@
         {
             errorMessage = "Invalid username or password.";
         }
+    }
+
+    private void LogAdminLogin(string adminName)
+    {
+        Logger.LogInformation($"Admin Login: {adminName}");
     }
 }
