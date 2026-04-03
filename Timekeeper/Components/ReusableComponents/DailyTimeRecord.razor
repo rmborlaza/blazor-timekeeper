@@ -1,4 +1,4 @@
-﻿<table class="table table-striped">
+﻿<table class="table m-0">
     <thead>
         <tr>
             <td>Date</td>
@@ -42,7 +42,18 @@
                     @(dtr.TimeOut == null ? "–" : dtr.TimeOut.TransactionDateTimeLocal.ToShortTimeString())
                 </td>
                 <td>
-                    @dtr.Attendance
+                    @switch (dtr.Attendance)
+                    {
+                        case AttendanceState.LateUndertime:
+                            <text>Late & Undertime</text>
+                            break;
+                        case AttendanceState.OnDuty:
+                            <text>On Duty</text>
+                            break;
+                        default:
+                            @dtr.Attendance
+                            break;
+                    }
                 </td>
                 <td>
                     @(dtr.TimeWorked == null ? "–" : $"{dtr.TimeWorked.Value.TotalHours:0.##} hours")

@@ -57,7 +57,16 @@
         </div>
 
         <div class="col col-12 col-md-6">
-            <DailyTimeRecord Records="@dailyRecords"/>
+            <div class="card">
+                <div class="card-header">
+                    <span class="h3">
+                        Daily Time Records
+                    </span>
+                </div>
+                <div class="card-body p-0 pb-3">
+                    <DailyTimeRecord Records="@dailyRecords" />
+                </div>
+            </div>
         </div>
 
         @* <div class="col col-12 col-md-6">
