@@ -17,6 +17,8 @@ namespace Timekeeper.Services
 
         public DbSet<TransactionType> TransactionType { get; set; }
 
+        public DbSet<Address> Addresses { get; set; }
+
         public TimekeeperContext(DbContextOptions<TimekeeperContext> options) : base(options)
         {
 

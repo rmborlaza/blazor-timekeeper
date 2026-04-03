@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@page "/employees"
+@attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>All Employees</PageTitle>
 <h1>All Employees</h1>
@@ -7,7 +8,7 @@
 </NavLink>
 
 <div class="mt-3 col-12">
-    <EmployeeListComponent />
+    <EmployeeList />
 </div>
 
 @code {

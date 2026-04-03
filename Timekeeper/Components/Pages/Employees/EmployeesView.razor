@@ -1,57 +1,125 @@
 ﻿@page "/employees/view/{id:int}"
+@using System.Security.Claims
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrator,Employee")]
 @inject NavigationManager NavManager
-@inject TimekeeperContext DbContext
+@inject EmployeeDb EmployeeDb
+@inject TimekeepingTransactionsDb TransactionsDb
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<EmployeesView> Logger;
 
 <PageTitle>View Employee</PageTitle>
 <h1>View Employee</h1>
 
-<div class="row mb-3">
-    <div class="col col-12 col-lg-6">
-        <EmployeeCardComponent Employee="@employee" />
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col col-12">
-        <NavLink class="btn btn-primary" href="@($"/employees/update/{employee.EmployeeId}")">
-            Update Employee Details
-        </NavLink>
-        <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-outline-danger">Delete Employee</button>
-    </div>
-</div>
-
 <div class="row">
-    <div class="col col-12">
-        @if (employee != null)
-        {
-            <div class="mb-3">
-                <TimeLogButtonComponent Employee="@employee" TimeSubmitted="HandleSubmitAsync" />
-            </div>
-    
-            <div>
-                <TimeLogListComponent Employee="@employee" Transactions="@transactions" />
-            </div>
-        }
+    <div class="col col-12 col-md-6 col-lg-6 col-xl-4 mb-3">
+        <EmployeeCard Employee="@employee" />
     </div>
+    <div class="col col-12 col-md-6 col-lg-6 col-xl-4 mb-3">
+        <AddressCard Address="@employee.Address" />
+    </div>
+</div>
+
+<div class="row mb-1">
+    <div class="col col-12">
+        <NavLink href="@($"/employees/change-password/{employee.EmployeeId}")" class="btn btn-primary">
+            Change Password
+        </NavLink>
+
+        <CascadingAuthenticationState>
+            <AuthorizeView Roles="Administrator">
+                <NavLink class="btn btn-primary me-1" href="@($"/employees/update/{employee.EmployeeId}")">
+                    Update Employee Details
+                </NavLink>
+                @if (canDelete)
+                {
+                    <button type="button" @onclick="DeleteEmployeeAsync" class="btn btn-outline-danger">
+                        Delete Employee
+                    </button>
+                }
+            </AuthorizeView>
+        </CascadingAuthenticationState>
+    </div>
+</div>
+
+<div class="row mb-3">
+
+    @if (employee != null)
+    {
+        <div class="col col-12 mb-3">
+            @if (canTimeIn)
+            {
+                <div class="mb-3">
+                    <TimeLogButtons
+                        Employee="@employee"
+                        Transactions="@transactions"
+                        TimeSubmitted="HandleSubmitAsync" />
+                </div>
+            }
+        </div>
+
+        <div class="col col-12 col-md-12 col-xl-8">
+            <div class="card">
+                <div class="card-header">
+                    <span class="h4">
+                        Daily Time Records
+                    </span>
+                </div>
+                <div class="card-body p-0 pb-3">
+                    <DailyTimeRecord Records="@dailyRecords" />
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
+    private bool canTimeIn = false;
+    private bool canDelete = false;
     private Employee employee = new();
     private List<TimekeepingTransaction> transactions;
+    private DailyTimeRecordCollection dailyRecords;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                NavManager.NavigateTo("/");
+                return;
+            }
+
+            var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+            int.TryParse(viewerId, out int id);
+
+            canTimeIn = id == Id;
+            canDelete = !(canTimeIn && viewerRole == "Administrator");
+
+            if (!canTimeIn && viewerRole != "Administrator")
+            {
+                NavManager.NavigateTo($"/employees/view/{id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         try
         {
-            employee = await DbContext.Employees
-                .Include(e => e.TimeKeepingTransactions)
-                .ThenInclude(t => t.TransactionType)
-                .FirstOrDefaultAsync(e => e.EmployeeId == Id);
-
+            employee = await EmployeeDb.GetEmployeeAsync(Id, new List<Type> { typeof(Address) });
             await LoadTransactionsAsync();
         }
         catch (Exception ex)
@@ -62,30 +130,16 @@
 
     private async Task LoadTransactionsAsync()
     {
-        transactions = await DbContext.TimeKeepingTransactions
-            .Where(t => t.EmployeeId == employee.EmployeeId)
-            .Include(t => t.Employee)
-            .Include(t => t.TransactionType)
-            .OrderByDescending(t => t.TransactionDateTime)
-            .ToListAsync();
+        transactions = await TransactionsDb.GetTimekeepingTransactionsAsync(employee.EmployeeId);
+
+        dailyRecords = new DailyTimeRecordCollection(transactions);
     }
 
     private async Task DeleteEmployeeAsync()
     {
         try
         {
-            DbContext.Employees.Remove(employee);
-            await DbContext.SaveChangesAsync();
-
-            var unusedTransactionNames = await DbContext.TransactionType
-                .Where(tt => !DbContext.TimeKeepingTransactions.Any(tr => tr.TransactionTypeId == tt.TransactionTypeId))
-                .ToListAsync();
-            if (unusedTransactionNames.Any())
-            {
-                DbContext.TransactionType.RemoveRange(unusedTransactionNames);
-                await DbContext.SaveChangesAsync();
-            }
-
+            await EmployeeDb.DeleteEmployeeAsync(employee);
             NavManager.NavigateTo("/");
         }
         catch (Exception ex)
@@ -108,6 +162,7 @@
 
     private void HandleException(Exception ex)
     {
+        Logger.LogCritical(ex, "Exception thrown in EmployeesView");
         Debug.WriteLine(ex.Message);
         Debugger.Break();
     }

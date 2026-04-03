@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Timekeeper.Services;
 
@@ -11,9 +12,11 @@ using Timekeeper.Services;
 namespace Timekeeper.Migrations
 {
     [DbContext(typeof(TimekeeperContext))]
-    partial class TimekeeperContextModelSnapshot : ModelSnapshot
+    [Migration("20260331115101_EmployeeUpdate")]
+    partial class EmployeeUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
