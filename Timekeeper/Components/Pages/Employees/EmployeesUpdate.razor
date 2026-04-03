@@ -1,5 +1,10 @@
 ﻿@page "/employees/update/{id:int}"
-@inject TimekeeperContext DbContext
+@attribute [Authorize(Roles = "Administrator")]
+@rendermode InteractiveServer
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject EmployeeDb EmployeeDb
+@inject ILogger<EmployeesUpdate> Logger;
 
 <PageTitle>Update Employee Information</PageTitle>
 <h1>Update Employee Information</h1>
@@ -7,8 +12,12 @@
 @if (employee != null)
 {
     <div class="row">
-        <div class="col col-12 col-lg-6">
-            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" />
+        <div class="col col-12">
+            <EmployeeForm
+                IsUpdateMode="true"
+                CanChangeAccountType="@canChangeType"
+                Employee="@employee"
+                OnFormComplete="HandleFormCompletion" />
         </div>
     </div>
 }
@@ -18,17 +27,45 @@
     public int Id { get; set; }
 
     private Employee employee;
+    private bool canChangeType = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+            int.TryParse(viewerId, out int vId);
+
+            if (vId == Id)
+            {
+                canChangeType = false;
+            }
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         try
         {
-            employee = await DbContext.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.EmployeeId == Id);
+            employee = await EmployeeDb.GetEmployeeAsync(Id, new List<Type> { typeof(Address) });
+            if (employee == null)
+            {
+                NavManager.NavigateTo($"/employees");
+            }
         }
         catch (Exception ex)
         {
+            Logger.LogCritical(ex, "Exception thrown in EmploeesUpdate");
             Debug.WriteLine(ex.Message);
             Debugger.Break();
         }
+    }
+
+    private void HandleFormCompletion()
+    {
+        NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
     }
 }

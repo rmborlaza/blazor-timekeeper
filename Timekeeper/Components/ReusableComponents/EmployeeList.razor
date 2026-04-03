@@ -1,20 +1,23 @@
 ﻿@rendermode InteractiveServer
-@inject TimekeeperContext DbContext
+@inject EmployeeDb EmployeeDb
+@inject ILogger<EmployeeList> Logger
 
 <table class="table table-striped">
     <thead>
         <tr>
             <td>Employee ID</td>
             <td>Full Name</td>
+            <td>Username</td>
+            <td>Email</td>
+            <td>Account Type</td>
             <td>Date Hired</td>
-            <td>Gender</td>
         </tr>
     </thead>
     <tbody>
         @if (employees == null)
         {
             <tr>
-                <td colspan="4">
+                <td colspan="6">
                     <em>Loading...</em>
                 </td>
             </tr>
@@ -38,8 +41,10 @@
                             @employee.FirstName @employee.LastName
                         </NavLink>
                     </td>
+                    <td>@employee.Username</td>
+                    <td>@employee.Email</td>
+                    <td>@employee.AccountType.ToString()</td>
                     <td>@employee.DateHired.ToShortDateString()</td>
-                    <td>@employee.Gender</td>
                 </tr>
             }
         }
@@ -55,11 +60,12 @@
         {
             try
             {
-                employees = await DbContext.Employees.AsNoTracking().OrderBy(e => e.EmployeeId).ToListAsync();
+                employees = await EmployeeDb.GetEmployeesAsync();
                 StateHasChanged();
             }
             catch (Exception ex)
             {
+                Logger.LogCritical(ex, "Exception throwin in EmployeeList");
                 Debug.WriteLine(ex.Message);
                 Debugger.Break();
             }

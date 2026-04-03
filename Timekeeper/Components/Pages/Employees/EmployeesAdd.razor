@@ -1,17 +1,27 @@
-﻿@page "/employees/add"
+﻿@inject NavigationManager NavManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrator")]
+@page "/employees/add"
 
 <PageTitle>Add New Employee</PageTitle>
 <h1>Add New Employee</h1>
 
 @if (employee != null)
 {
-    <div class="row">
-        <div class="col col-12 col-lg-6">
-            <EmployeeFormComponent Employee="@employee" />
+    <div class="row mb-3">
+        <div class="col col-12">
+            <EmployeeForm
+                Employee="@employee"
+                OnFormComplete="HandleSuccessSubmit" />
         </div>
     </div>
 }
 
 @code {
     private Employee employee = new();
+
+    private void HandleSuccessSubmit()
+    {
+        NavManager.NavigateTo("/employees");
+    }
 }

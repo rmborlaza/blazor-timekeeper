@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Timekeeper</a>
     </div>
@@ -9,17 +11,52 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Employees
-            </NavLink>
-        </div>
+        <CascadingAuthenticationState>
+            <AuthorizeView Roles="Administrator,Employee">
+                <div class="nav-item px-3" Match="NavLinkMatch.All">
+                    <NavLink class="nav-link" href="@employeeLink">
+                        My Account
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/logout">
+                        Logout
+                    </NavLink>
+                </div>
+            </AuthorizeView>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="time-logs">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Time Logs
-            </NavLink>
-        </div>
+            <AuthorizeView Roles="Administrator">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/employees" Match="NavLinkMatch.All">
+                        @* <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> *@
+                        Employees
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/time-logs" Match="NavLinkMatch.All">
+                        @* <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> *@
+                        Time Logs
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+        </CascadingAuthenticationState>
     </nav>
 </div>
 
+@code {
+    private string employeeLink;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var employeeIdClaim = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+        if (int.TryParse(employeeIdClaim, out int employeeId))
+        {
+            employeeLink = $"/employees/view/{employeeId}";
+        }
+    }
+}

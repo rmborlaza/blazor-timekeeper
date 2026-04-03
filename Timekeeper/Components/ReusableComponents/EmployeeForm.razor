@@ -1,0 +1,220 @@
+﻿@rendermode InteractiveServer
+@inject NavigationManager NavManager
+@inject EmployeeDb EmployeeDb
+@inject ILogger<EmployeeForm> Logger
+
+<EditForm Model="@Employee" OnValidSubmit="SubmitForm" FormName="AddEmployeeForm">
+    <DataAnnotationsValidator />
+    <div class="row">
+        <div class="col col-12 col-lg-6">
+            <div class="mb-3">
+                <label for="first-name">First Name:</label>
+                <InputText id="first-name" @bind-Value="Employee.FirstName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="last-name">Last Name:</label>
+                <InputText id="last-name" @bind-Value="Employee.LastName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="gender">Gender:</label>
+                <InputText id="gender" @bind-Value="Employee.Gender" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="date-hired">Date Hired:</label>
+                <InputDate id="date-hired" @bind-Value="Employee.DateHired" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="street" class="form-label">Street Address</label>
+                <InputText id="street" class="form-control" @bind-Value="@Employee.Address.StreetAddress" />
+            </div>
+
+            <div class="mb-3">
+                <label for="barangay" class="form-label">Barangay</label>
+                <InputText id="barangay" class="form-control" @bind-Value="@Employee.Address.Barangay" />
+            </div>
+
+            <div class="mb-3">
+                <label for="city" class="form-label">City</label>
+                <InputText id="city" class="form-control" @bind-Value="@Employee.Address.City" />
+            </div>
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="@Employee.Username" />
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" type="email" class="form-control" @bind-Value="@Employee.Email" />
+            </div>
+    
+            <div class="mb-3">
+                <label for="type" class="form-label">Account Type</label>
+                <InputSelect class="form-select" @bind-Value="@accountType" disabled="@(!CanChangeAccountType)">
+                    <option value="0">Employee</option>
+                    <option value="1">Administrator</option>
+                </InputSelect>
+            </div>
+
+            @if (!IsUpdateMode)
+            {
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="@ClearPassword" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirmPw" class="form-label">Confirm Password</label>
+                    <InputText id="confirmPw" type="password" class="form-control" @bind-Value="@ConfirmPassword" />
+                </div>
+            }
+    
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">@buttonLabel</button>
+                <button @onclick="async () => await OnFormComplete.InvokeAsync()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+
+        <div class="col col-12 col-lg-6">
+            <div class="mb-3">
+                <ValidationMessage For="@(() => Employee.FirstName)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.LastName)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Gender)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Address.StreetAddress)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Address.Barangay)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Address.City)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Username)"></ValidationMessage>
+                <ValidationMessage For="@(() => Employee.Email)"></ValidationMessage>
+                <span class="text-danger @dUnameEmail">An employee with the same username or email already exists.</span>
+                <span class="text-danger @dPass">@dPassMessage</span>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; }
+
+    [Parameter]
+    public bool IsUpdateMode { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnFormComplete { get; set; }
+
+    [Parameter]
+    public bool CanChangeAccountType { get; set; } = true;
+
+    public string ClearPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+
+    private string buttonLabel = "Add Employee";
+    private bool passwordChanged = false;
+
+    private int accountType;
+    private string dPass = "d-none";
+    private string dUnameEmail = "d-none";
+    private string dPassMessage = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Employee.AccountType == AccountType.Administrator)
+        {
+            accountType = 1;
+        }
+        else
+        {
+            accountType = 0;
+        }
+    }
+
+    private async Task SubmitForm()
+    {
+        Employee.Username = Employee.Username.Trim().Replace(" ", "").ToLower();
+        Employee.Email = Employee.Email.Trim().ToLower();
+        Employee.FirstName = Employee.FirstName.Trim();
+        Employee.LastName = Employee.LastName.Trim();
+
+        try
+        {
+            var existingEmployee = await EmployeeDb.FindEmployeeAsync(Employee.Username, Employee.Email, Employee.EmployeeId);
+            if (existingEmployee != null)
+            {
+                dUnameEmail = "d-inline";
+                return;
+            }
+            else
+            {
+                dUnameEmail = "d-none";
+            }
+
+            if (IsUpdateMode)
+            {
+                await UpdateEmployeeAsync();
+            }
+            else
+            {
+                if (!Password.ValidatePassword(ClearPassword))
+                {
+                    dPass = "d-inline";
+                    dPassMessage = "Password cannot be less than 8 characters";
+                    return;
+                }
+                else if (ClearPassword != ConfirmPassword)
+                {
+                    dPass = "d-inline";
+                    dPassMessage = "Passwords do not match.";
+                    return;
+                }
+                else
+                {
+                    dPass = "d-none";
+                }
+
+                await AddEmployeeAsync();
+            }
+
+            await OnFormComplete.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+    private async Task AddEmployeeAsync()
+    {
+        Employee.PasswordHash = Password.CalculateHash(ClearPassword);
+        Employee.AccountType = (AccountType)accountType;
+        await EmployeeDb.AddEmployeeAsync(Employee);
+    }
+
+    private async Task UpdateEmployeeAsync()
+    {
+        Employee.AccountType = (AccountType)accountType;
+        await EmployeeDb.UpdateEmployeeAsync(Employee);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Employee?.EmployeeId == 0)
+        {
+            Employee.DateHired = DateTime.UtcNow.ToLocalTime();
+        }
+        else
+        {
+            buttonLabel = "Save Changes";
+        }
+    }
+
+    private void HandleException(Exception ex)
+    {
+        Logger.LogCritical(ex, "Exception thrown in EmployeeForm");
+        Debug.WriteLine(ex.Message);
+        Debugger.Break();
+    }
+}

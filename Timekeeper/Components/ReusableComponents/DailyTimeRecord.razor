@@ -1,0 +1,84 @@
+﻿<table class="table m-0">
+    <thead>
+        <tr>
+            <td>Date</td>
+            <td>Time In</td>
+            <td>Time Out</td>
+            <td>Attendance</td>
+            <td>Hours Worked</td>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Records == null)
+        {
+            <tr>
+                <td colspan="5"><em>Loading...</em></td>
+            </tr>
+        }
+
+        else if (Records.Count == 0)
+        {
+            <tr>
+                <td colspan="5">No records in the database.</td>
+            </tr>
+        }
+
+        else
+        {
+            @foreach (var dtr in Records)
+            {
+                bool isRed = dtr.Attendance == AttendanceState.Late;
+                isRed = isRed || dtr.Attendance == AttendanceState.LateUndertime;
+                isRed = isRed || dtr.Attendance == AttendanceState.Undertime;
+
+                bool isGreen = dtr.Attendance == AttendanceState.OnDuty;
+
+                string rowColor = "";
+                
+                if (isRed)
+                {
+                    rowColor = "table-danger";
+                }
+                else if (isGreen)
+                {
+                    rowColor = "table-success";
+                }
+
+            <tr class="@rowColor">
+                <td>
+                    @dtr.Date.ToShortDateString()
+                </td>
+                <td>
+                    @dtr.TimeIn.TransactionDateTimeLocal.ToShortTimeString()
+                </td>
+                <td>
+                    @(dtr.TimeOut == null ? "–" : dtr.TimeOut.TransactionDateTimeLocal.ToShortTimeString())
+                </td>
+                <td>
+                    @switch (dtr.Attendance)
+                    {
+                        case AttendanceState.LateUndertime:
+                            <text>Late & Undertime</text>
+                            break;
+                        case AttendanceState.OnDuty:
+                            <text>On Duty</text>
+                            break;
+                        default:
+                            @dtr.Attendance
+                            break;
+                    }
+                </td>
+                <td>
+                    @(dtr.TimeWorked == null ? "–" : $"{dtr.TimeWorked.Value.TotalHours:0.##} hours")
+                </td>
+            </tr>
+            }
+        }
+    </tbody>
+</table>
+
+
+@code {
+    [Parameter]
+    public DailyTimeRecordCollection Records { get; set; }
+}
