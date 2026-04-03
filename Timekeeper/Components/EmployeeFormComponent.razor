@@ -179,6 +179,7 @@
 
     private async Task UpdateEmployeeAsync()
     {
+        Employee.AccountType = (AccountType)accountType;
         await EmployeeDb.UpdateEmployeeAsync(Employee);
     }
 

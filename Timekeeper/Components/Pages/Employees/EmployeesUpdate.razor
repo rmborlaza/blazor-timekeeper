@@ -1,5 +1,6 @@
 ﻿@page "/employees/update/{id:int}"
 @attribute [Authorize(Roles = "Administrator")]
+@rendermode InteractiveServer
 @inject NavigationManager NavManager
 @inject EmployeeDb EmployeeDb
 
@@ -10,7 +11,10 @@
 {
     <div class="row">
         <div class="col col-12">
-            <EmployeeFormComponent IsUpdateMode="true" Employee="@employee" OnFormComplete="HandleFormCompletion" />
+            <EmployeeFormComponent 
+                IsUpdateMode="true" 
+                Employee="@employee" 
+                OnFormComplete="HandleFormCompletion" />
         </div>
     </div>
 }

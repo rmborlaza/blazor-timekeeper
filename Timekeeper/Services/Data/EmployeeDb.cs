@@ -172,9 +172,16 @@ namespace Timekeeper.Services.Data
 
             await using var context = await _contextFactory.CreateDbContextAsync();
 
-            var updateEmployee = await context.Employees.FindAsync(employee.EmployeeId);
+            var updateEmployee = await context.Employees
+                .Where(e => e.EmployeeId == employee.EmployeeId)
+                .Include(e => e.Address)
+                .FirstOrDefaultAsync();
+
             if (updateEmployee != null)
             {
+                employee.Address.AddressId = updateEmployee.Address.AddressId;
+                employee.Address.EmployeeId = updateEmployee.Address.EmployeeId;
+
                 updateEmployee.FirstName = employee.FirstName;
                 updateEmployee.LastName = employee.LastName;
                 updateEmployee.Gender = employee.Gender;
