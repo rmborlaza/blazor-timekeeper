@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles = "Administrator")]
 @rendermode InteractiveServer
 @inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthStateProvider
 @inject EmployeeDb EmployeeDb
 @inject ILogger<EmployeesUpdate> Logger;
 
@@ -12,9 +13,10 @@
 {
     <div class="row">
         <div class="col col-12">
-            <EmployeeFormComponent 
-                IsUpdateMode="true" 
-                Employee="@employee" 
+            <EmployeeFormComponent
+                IsUpdateMode="true"
+                CanChangeAccountType="@canChangeType"
+                Employee="@employee"
                 OnFormComplete="HandleFormCompletion" />
         </div>
     </div>
@@ -25,6 +27,24 @@
     public int Id { get; set; }
 
     private Employee employee;
+    private bool canChangeType = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+            int.TryParse(viewerId, out int vId);
+
+            if (vId == Id)
+            {
+                canChangeType = false;
+            }
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

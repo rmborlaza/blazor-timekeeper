@@ -31,7 +31,20 @@
                 isRed = isRed || dtr.Attendance == AttendanceState.LateUndertime;
                 isRed = isRed || dtr.Attendance == AttendanceState.Undertime;
 
-            <tr class="@(isRed ? "table-danger" : "")">
+                bool isGreen = dtr.Attendance == AttendanceState.OnDuty;
+
+                string rowColor = "";
+                
+                if (isRed)
+                {
+                    rowColor = "table-danger";
+                }
+                else if (isGreen)
+                {
+                    rowColor = "table-success";
+                }
+
+            <tr class="@rowColor">
                 <td>
                     @dtr.Date.ToShortDateString()
                 </td>
