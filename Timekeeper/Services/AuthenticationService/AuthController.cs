@@ -2,6 +2,7 @@
 
 namespace Timekeeper.Services.AuthenticationService
 {
+    [Obsolete]
     [Route("auth")]
     public class AuthController : Controller
     {

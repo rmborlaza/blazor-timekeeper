@@ -6,6 +6,7 @@
 @inject EmployeeDb EmployeeDb
 @inject TimekeepingTransactionsDb TransactionsDb
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<EmployeesView> Logger;
 
 <PageTitle>View Employee</PageTitle>
 <h1>View Employee</h1>
@@ -41,8 +42,6 @@
     </div>
 </div>
 
-
-
 <div class="row">
 
     @if (employee != null)
@@ -51,12 +50,15 @@
             @if (canTimeIn)
             {
                 <div class="mb-3">
-                    <TimeLogButtonComponent Employee="@employee" Transactions="@transactions" TimeSubmitted="HandleSubmitAsync" />
+                    <TimeLogButtonComponent
+                        Employee="@employee"
+                        Transactions="@transactions"
+                        TimeSubmitted="HandleSubmitAsync" />
                 </div>
             }
         </div>
 
-        <div class="col col-12 col-md-6">
+        <div class="col col-12 col-md-8">
             <div class="card">
                 <div class="card-header">
                     <span class="h3">
@@ -68,10 +70,6 @@
                 </div>
             </div>
         </div>
-
-        @* <div class="col col-12 col-md-6">
-            <TimeLogListComponent Employee="@employee" Transactions="@transactions" />
-        </div> *@
     }
 </div>
 
@@ -87,26 +85,33 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (!user.Identity?.IsAuthenticated ?? true)
+        try
         {
-            NavManager.NavigateTo("/");
-            return;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                NavManager.NavigateTo("/");
+                return;
+            }
+
+            var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
+
+            int.TryParse(viewerId, out int id);
+
+            canTimeIn = id == Id;
+            canDelete = !(canTimeIn && viewerRole == "Administrator");
+
+            if (!canTimeIn && viewerRole != "Administrator")
+            {
+                NavManager.NavigateTo($"/employees/view/{id}");
+            }
         }
-
-        var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-        var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
-
-        int.TryParse(viewerId, out int id);
-
-        canTimeIn = id == Id;
-        canDelete = !(canTimeIn && viewerRole == "Administrator");
-
-        if (!canTimeIn && viewerRole != "Administrator")
+        catch (Exception ex)
         {
-            NavManager.NavigateTo($"/employees/view/{id}");
+            HandleException(ex);
         }
     }
 
@@ -157,6 +162,7 @@
 
     private void HandleException(Exception ex)
     {
+        Logger.LogCritical(ex, "Exception thrown in EmployeesView");
         Debug.WriteLine(ex.Message);
         Debugger.Break();
     }

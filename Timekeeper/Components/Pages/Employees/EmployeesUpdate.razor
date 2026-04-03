@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavManager
 @inject EmployeeDb EmployeeDb
+@inject ILogger<EmployeesUpdate> Logger;
 
 <PageTitle>Update Employee Information</PageTitle>
 <h1>Update Employee Information</h1>
@@ -30,9 +31,14 @@
         try
         {
             employee = await EmployeeDb.GetEmployeeAsync(Id, new List<Type> { typeof(Address) });
+            if (employee == null)
+            {
+                NavManager.NavigateTo($"/employees");
+            }
         }
         catch (Exception ex)
         {
+            Logger.LogCritical(ex, "Exception thrown in EmploeesUpdate");
             Debug.WriteLine(ex.Message);
             Debugger.Break();
         }

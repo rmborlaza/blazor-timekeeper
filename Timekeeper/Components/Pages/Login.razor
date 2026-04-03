@@ -37,48 +37,78 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        if (user.Identity?.IsAuthenticated == true)
+        try
         {
-            var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
-
-            int.TryParse(viewerId, out int id);
-
-            if (viewerRole == "Administrator")
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity?.IsAuthenticated == true)
             {
-                var firstName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-                var lastName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+                var viewerRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                var viewerId = user.Claims.FirstOrDefault(c => c.Type == "EmployeeId")?.Value;
 
-                if (firstName != null && lastName != null)
+                int.TryParse(viewerId, out int id);
+
+                if (viewerRole == "Administrator")
                 {
-                    LogAdminLogin($"{firstName} {lastName}");
+                    var firstName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                    var lastName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+
+                    if (firstName != null && lastName != null)
+                    {
+                        LogAdminLogin($"{firstName} {lastName}");
+                    }
+
+                    NavManager.NavigateTo("/employees");
                 }
-
-                NavManager.NavigateTo("/employees");
+                else
+                {
+                    NavManager.NavigateTo($"/employees/view/{id}");
+                }
+                return;
             }
-            else
+
+            var context = HttpContextAccessor.HttpContext;
+
+            if (context is not null && context.Request.Method == "POST")
             {
-                NavManager.NavigateTo($"/employees/view/{id}");
+                var username = context.Request.Form["username"].ToString();
+                var password = context.Request.Form["password"].ToString();
+
+                var employee = await AuthService.LoginAsync(username, password);
+                if (employee != null)
+                {
+                    if (employee.AccountType == AccountType.Administrator)
+                    {
+                        LogAdminLogin($"{employee.FirstName} {employee.LastName}");
+                        NavManager.NavigateTo("/employees");
+                    }
+                    else
+                    {
+                        NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
+                    }
+                }
+                else
+                {
+                    errorMessage = "Invalid username or password.";
+                }
             }
-            return;
         }
-
-        var context = HttpContextAccessor.HttpContext;
-
-        if (context is not null && context.Request.Method == "POST")
+        catch (Exception ex)
         {
-            var username = context.Request.Form["username"].ToString();
-            var password = context.Request.Form["password"].ToString();
+            HandleException(ex);
+        }
+    }
 
-            var employee = await AuthService.LoginAsync(username, password);
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var employee = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
             if (employee != null)
             {
                 if (employee.AccountType == AccountType.Administrator)
                 {
-                    LogAdminLogin($"{employee.FirstName} {employee.LastName}");
-                    NavManager.NavigateTo("/employees");
+                    NavManager.NavigateTo("/");
                 }
                 else
                 {
@@ -90,30 +120,21 @@
                 errorMessage = "Invalid username or password.";
             }
         }
-    }
-
-    private async Task HandleLogin()
-    {
-        var employee = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
-        if (employee != null)
+        catch (Exception ex)
         {
-            if (employee.AccountType == AccountType.Administrator)
-            {
-                NavManager.NavigateTo("/");
-            }
-            else
-            {
-                NavManager.NavigateTo($"/employees/view/{employee.EmployeeId}");
-            }
-        }
-        else
-        {
-            errorMessage = "Invalid username or password.";
+            HandleException(ex);
         }
     }
 
     private void LogAdminLogin(string adminName)
     {
         Logger.LogInformation($"Admin Login: {adminName}");
+    }
+
+    private void HandleException(Exception ex)
+    {
+        Logger.LogCritical(ex, "Critical error");
+        Debug.WriteLine(ex.Message);
+        Debugger.Break();
     }
 }

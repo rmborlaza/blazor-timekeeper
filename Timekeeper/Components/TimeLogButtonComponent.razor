@@ -1,4 +1,5 @@
 ﻿@inject TimekeepingTransactionsDb TransactionsDb
+@inject ILogger<TimeLogButtonComponent> Logger
 
 <button @onclick="TimeInAsync" class="btn btn-success" disabled="@(!canTimeIn)">Time In</button>
 <button @onclick="TimeOutAsync" class="btn btn-danger" disabled="@canTimeIn">Time Out</button>
@@ -83,6 +84,7 @@
 
     private void HandleException(Exception ex)
     {
+        Logger.LogCritical(ex, "Exception thrown in TimeLogButtonComponent");
         Debug.WriteLine(ex.Message);
         Debugger.Break();
     }
