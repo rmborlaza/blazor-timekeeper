@@ -12,9 +12,25 @@
     <nav class="nav flex-column">
 
         <CascadingAuthenticationState>
+            <AuthorizeView>
+                <NotAuthorized>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                            Login
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
             <AuthorizeView Roles="Administrator,Employee">
-                <div class="nav-item px-3" Match="NavLinkMatch.All">
-                    <NavLink class="nav-link" href="@employeeLink">
+                <div class="nav-item px-3">
+                    <span class="nav-item-neutral">
+                        <strong>Hello, @name</strong>
+                    </span>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@employeeLink" Match="NavLinkMatch.All">
                         My Account
                     </NavLink>
                 </div>
@@ -46,6 +62,7 @@
 
 @code {
     private string employeeLink;
+    private string name;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,6 +73,7 @@
 
         if (int.TryParse(employeeIdClaim, out int employeeId))
         {
+            name = user.Identity.Name;
             employeeLink = $"/employees/view/{employeeId}";
         }
     }
